@@ -1,0 +1,147 @@
+---
+title: Dynamic Report on NZ Driving
+output: html_fragment
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, error=FALSE)
+#import library
+library(tidyverse)
+
+```
+
+```{css}
+body {
+  color:#FFFFFF;
+  background-color:#000000;
+  font-family: "Courier";
+  font-size: 20px;
+  font-weight: lighter;
+  margin: 40px;
+  
+}
+
+h2 {
+font-family: "Courier";
+font-weight: bold;
+
+}
+
+h1 {
+font-family: "Courier";
+font-weight: bold;
+
+}
+
+h3 {
+font-family: "Courier";
+font-weight: bold;
+
+}
+```
+
+
+```{r}
+#read in csv file as logged_data.
+
+logged_data <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1ExtkiezgETArhUnrrDROq5LsaGra2mgt4KwFIRMJxZsF8xpi-vrjU-DxmtVEzgHai2XMU48QcXAO/pub?gid=2116230245&single=true&output=csv")
+
+#modify logged_data by renaming all variables and creating the data frame latest_data.
+
+latest_data <- logged_data %>% rename(
+  time_collected = 1,
+  traffic_violations = 2,
+  most_violations = 3,
+  parking_scale = 4
+)
+
+```
+
+## How good is New Zealand at driving and parking?
+
+This reports aim is to explain data collected on New Zealands driving by analyzing the number of traffic violations that occur in a day, the vehicle which committed the most of these violations, and how well the parking was overall.
+<br>
+<br>
+```{r}
+#create a bar chart that takes the number of traffic violations that were observed and filters the graph via the vehicle that committed the most violations on that day. 
+
+most_violations_bar <- latest_data %>%
+  ggplot() +
+  geom_bar(aes(y = traffic_violations,fill = most_violations),width=0.5) +
+  labs(title = "Number of violations observed", 
+       x ="Frequency",
+       y ="Number of traffic violations",
+       caption = "Source: Statistics 220 Project 2 Personal survey")
+```
+```{r}
+parking_scale_bar <- latest_data %>%
+  ggplot() +
+  geom_bar(aes(y = parking_scale,fill=most_violations),width=0.5) +
+  labs(title = "Rating of observed parking based on 1-10 scale",
+       x ="Frequency",
+       y ="Ranking",
+       caption = "Source: Statistics 220 Project 2 Personal survey")
+
+```
+
+```{r}
+#Collect the vehicle that is most likely of being the vehicle to commit a violation.
+
+likely_violator <- names(sort(table(latest_data$most_violations),decreasing = TRUE))[1] %>% noquote() %>% tolower()
+
+#Collect the mean parking rating given from data collected.
+
+mean_parking_rating <- mean(latest_data$parking_scale)
+
+#Collect the maximum traffic violations observed on a day from data collected. Then round it to 1dp.
+
+maximum_traffic_violations_observed <-
+  max(latest_data$traffic_violations)
+
+rounded_mean <- round(mean_parking_rating,1)
+```
+
+```{r}
+#displays the parking_scale_bar chart and provides a nice color pallet to the keys for groupings.
+
+parking_scale_bar + scale_fill_manual(values = c('#0073BD','#0D5C63','#44A1A0','#78CDD7','#247B7B'))
+
+```
+<br>
+<br>
+
+### Bar chart 1:
+The above bar chart shows us the frequency of rankings given throughout the period of data collection. It filters this by the vehicle that was observed breaking the most violations on the day. 
+
+From this chart we would expect that the mean parking rating to be around 5. We also notice that it appears that more rankings of higher than 5 were given than lower than 5 so we'd expect this number to lean towards 6 rather than 4. 
+
+This is confirmed by taking the mean of our data (rounded to 1dp) which is:`r rounded_mean`.
+<br>
+<br>
+
+```{r}
+#displays the most_violations_bar chart and provides a nice color pallet to the keys for groupings.
+most_violations_bar + scale_fill_manual(values = c('#0073BD','#0D5C63','#44A1A0','#78CDD7','#247B7B'))
+```
+
+### Bar chart 2:
+
+The above chart displays the frequency of the amount of violations observed when the data was collected and filters this by the vehicle that committed the most violations on the day. 
+
+From this data we see that there are three peaks around 2,3,6 all counts which have occurred four times in the data collected. We also note that there are no recordings of the number of violations of 7, and, 9+ 
+
+Our highest recorded number of traffic violations observed in one day was: `r maximum_traffic_violations_observed`. 
+With the most likely vehicles to be observed violating traffic laws in New Zealand being: `r likely_violator`.
+<br>
+<br>
+
+## Conculsion:
+
+From this we can conclude that on a 1 to 10 scale drivers in New Zealand park slightly above average with a rating of `r rounded_mean`.  
+
+We can also note that the highest number of traffic violations in one day was `r maximum_traffic_violations_observed` with the most likely vehicle to violate traffic violations on any day being `r likely_violator`. 
+
+From our bar charts we get a good visual overview of the distributions of violations observed, noting that numbers of 7 and 9+ do not appear to occur or did not occur in this observation. As well as the distribution of ratings given which did not give a rating above 9 or below 3.
+
+
+
